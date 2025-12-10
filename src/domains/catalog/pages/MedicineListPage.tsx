@@ -24,6 +24,8 @@ import {
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import CancelIcon from '@mui/icons-material/Cancel';
 import MedicineForm from '../components/medicine/MedicineForm'; // Importamos el formulario
 
 const MedicineListPage: React.FC = () => {
@@ -90,6 +92,30 @@ const MedicineListPage: React.FC = () => {
       }
   };
 
+  const handleActivate = async (id: number, nombre: string) => {
+    if (!window.confirm(`¿Está seguro de activar el medicamento ${nombre}?`)) return;
+    try {
+      await MedicineService.activateMedicine(id);
+      setSuccessMessage(`Medicamento "${nombre}" activado exitosamente.`);
+      fetchMedicines();
+      setTimeout(() => setSuccessMessage(null), 4000);
+    } catch (err) {
+      setError(`Error al activar el medicamento ${nombre}.`);
+    }
+  };
+
+  const handleDeletePermanently = async (id: number, nombre: string) => {
+    if (!window.confirm(`ADVERTENCIA: ¿Está seguro de ELIMINAR PERMANENTEMENTE el medicamento ${nombre}? Esta acción no se puede deshacer.`)) return;
+    try {
+      await MedicineService.deleteMedicinePermanently(id);
+      setSuccessMessage(`Medicamento "${nombre}" eliminado permanentemente.`);
+      fetchMedicines();
+      setTimeout(() => setSuccessMessage(null), 4000);
+    } catch (err) {
+      setError(`Error al eliminar permanentemente el medicamento ${nombre}.`);
+    }
+  };
+
 
   if (loading) {
     return (
@@ -153,12 +179,23 @@ const MedicineListPage: React.FC = () => {
                         <EditIcon fontSize="small" />
                       </IconButton>
                     </Tooltip>
-                    <Tooltip title="Desactivar (Soft Delete)">
-                      <IconButton 
-                        color="error" 
-                        onClick={() => handleDeactivate(medicine.id!, medicine.nombre)}
-                        disabled={medicine.activo === false}
-                      >
+
+                    {medicine.activo === false ? (
+                      <Tooltip title="Activar Medicamento">
+                        <IconButton color="success" onClick={() => handleActivate(medicine.id!, medicine.nombre)}>
+                          <CheckCircleIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    ) : (
+                      <Tooltip title="Desactivar (Soft Delete)">
+                        <IconButton color="warning" onClick={() => handleDeactivate(medicine.id!, medicine.nombre)}>
+                          <CancelIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    )}
+
+                    <Tooltip title="Eliminar Permanentemente (Hard Delete)">
+                      <IconButton color="error" onClick={() => handleDeletePermanently(medicine.id!, medicine.nombre)}>
                         <DeleteIcon fontSize="small" />
                       </IconButton>
                     </Tooltip>

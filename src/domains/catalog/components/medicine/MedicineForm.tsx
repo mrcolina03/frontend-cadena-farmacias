@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Medicine, CreateMedicineDTO, UpdateMedicineDTO } from '../../types/Medicine';
 import { MedicineService } from '../../clients/MedicineService';
+import { extractErrorMessage } from '@api/clients/axiosClient';
 import { 
   Box, 
   Button, 
@@ -87,7 +88,7 @@ const MedicineForm: React.FC<MedicineFormProps> = ({ initialData, onSuccess, onC
     } catch (err: any) {
       console.error("Error al guardar medicamento:", err);
       // Intentamos obtener un mensaje de error más específico del backend
-      const errorMessage = err.response?.data?.message || err.message || 'Error desconocido al guardar.';
+      const errorMessage = extractErrorMessage(err) || 'Error desconocido al guardar.';
       setError(errorMessage);
     } finally {
       setLoading(false);

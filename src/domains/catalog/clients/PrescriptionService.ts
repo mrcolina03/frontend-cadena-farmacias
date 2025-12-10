@@ -34,6 +34,11 @@ export const PrescriptionService = {
     return axiosClient.get<Prescription[]>(`${BASE_PATH}/medicamento/${medicineId}`);
   },
 
+  // GET: Buscar Prescripciones por texto (doctor, diagnóstico, etc.)
+  searchPrescriptions: (busqueda: string) => {
+    return axiosClient.get<Prescription[]>(`${BASE_PATH}/buscar?busqueda=${encodeURIComponent(busqueda)}`);
+  },
+
   // GET: Listar Prescripciones Vigentes
   getVigentesPrescriptions: () => {
     return axiosClient.get<Prescription[]>(`${BASE_PATH}/vigentes`);
@@ -47,6 +52,11 @@ export const PrescriptionService = {
   // PUT: Actualizar Prescripción
   updatePrescription: (id: number, data: UpdatePrescriptionDTO) => {
     return axiosClient.put<Prescription>(`${BASE_PATH}/${id}`, data);
+  },
+
+  // PUT: Activar Prescripción
+  activatePrescription: (id: number) => {
+    return axiosClient.put(`${BASE_PATH}/${id}/activar`);
   },
 
   // DELETE: Desactivar Prescripción (Soft Delete)

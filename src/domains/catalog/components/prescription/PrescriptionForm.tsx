@@ -5,6 +5,7 @@ import { Medicine } from '../../types/Medicine';
 import { PrescriptionService } from '../../clients/PrescriptionService';
 import { ClientService } from '../../clients/ClientService';
 import { MedicineService } from '../../clients/MedicineService';
+import { extractErrorMessage } from '@api/clients/axiosClient';
 import { 
   Box, 
   Button, 
@@ -113,7 +114,7 @@ const PrescriptionForm: React.FC<PrescriptionFormProps> = ({ initialData, onSucc
       
     } catch (err: any) {
       console.error("Error al guardar prescripción:", err);
-      const errorMessage = err.response?.data?.message || err.message || 'Error desconocido al guardar la prescripción.';
+      const errorMessage = extractErrorMessage(err) || 'Error desconocido al guardar la prescripción.';
       setError(errorMessage);
     } finally {
       setLoading(false);

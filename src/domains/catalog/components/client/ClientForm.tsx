@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Client, CreateClientDTO, UpdateClientDTO } from '../../types/Client';
 import { ClientService } from '../../clients/ClientService';
+import { extractErrorMessage } from '@api/clients/axiosClient';
 import { 
   Box, 
   Button, 
@@ -87,7 +88,7 @@ const ClientForm: React.FC<ClientFormProps> = ({ initialData, onSuccess, onClose
     } catch (err: any) {
       console.error("Error al guardar cliente:", err);
       // Asume que el backend devuelve un mensaje de error útil (ej. Cédula duplicada)
-      const errorMessage = err.response?.data?.message || err.message || 'Error desconocido al guardar el cliente.';
+      const errorMessage = extractErrorMessage(err) || 'Error al guardar el cliente.';
       setError(errorMessage);
     } finally {
       setLoading(false);

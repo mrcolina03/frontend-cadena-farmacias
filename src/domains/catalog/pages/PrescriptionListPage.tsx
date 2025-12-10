@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Prescription } from '../types/Prescription';
-import { Client } from '../types/Client';
-import { Medicine } from '../types/Medicine';
+// Se eliminaron imports de Client/Medicine porque ya no se usan en estado
 import { PrescriptionService } from '../clients/PrescriptionService';
 import { ClientService } from '../clients/ClientService'; // Necesario para lookups
 import { MedicineService } from '../clients/MedicineService'; // Necesario para lookups
@@ -28,6 +27,8 @@ import {
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import CancelIcon from '@mui/icons-material/Cancel';
 import PrescriptionForm from '../components/prescription/PrescriptionForm';
 
 // Definimos el tipo enriquecido para la lista, incluyendo nombres
@@ -44,9 +45,7 @@ const PrescriptionListPage: React.FC = () => {
   const [selectedPrescription, setSelectedPrescription] = useState<Prescription | undefined>(undefined);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  // Estados para los mapas de lookups (para una búsqueda eficiente O(1))
-  const [clientMap, setClientMap] = useState<Map<number, Client>>(new Map());
-  const [medicineMap, setMedicineMap] = useState<Map<number, Medicine>>(new Map());
+  // (No guardamos los mapas de lookup en estado porque no se leen fuera de la carga)
 
   // --- Función principal de carga y enriquecimiento ---
   const fetchPrescriptions = async () => {
@@ -61,9 +60,6 @@ const PrescriptionListPage: React.FC = () => {
       
       const newClientMap = new Map(clientsRes.data.map(c => [c.id!, c]));
       const newMedicineMap = new Map(medicinesRes.data.map(m => [m.id!, m]));
-      
-      setClientMap(newClientMap);
-      setMedicineMap(newMedicineMap);
 
       // 2. Cargar Prescripciones
       const prescriptionsRes = await PrescriptionService.getAllPrescriptions(); 
@@ -131,6 +127,30 @@ const PrescriptionListPage: React.FC = () => {
           setError(`Error al desactivar la prescripción ID ${id}.`);
       }
   };
+
+  const handleActivate = async (id: number) => {
+    if (!window.confirm(`¿Está seguro de activar la prescripción ID ${id}?`)) return;
+    try {
+      await PrescriptionService.activatePrescription(id);
+      setSuccessMessage(`Prescripción ID ${id} activada exitosamente.`);
+      fetchPrescriptions();
+      setTimeout(() => setSuccessMessage(null), 4000);
+    } catch (err) {
+      setError(`Error al activar la prescripción ID ${id}.`);
+    }
+  };
+
+  const handleDeletePermanently = async (id: number) => {
+    if (!window.confirm(`ADVERTENCIA: ¿Está seguro de ELIMINAR PERMANENTEMENTE la prescripción ID ${id}? Esta acción no se puede deshacer.`)) return;
+    try {
+      await PrescriptionService.deletePrescriptionPermanently(id);
+      setSuccessMessage(`Prescripción ID ${id} eliminada permanentemente.`);
+      fetchPrescriptions();
+      setTimeout(() => setSuccessMessage(null), 4000);
+    } catch (err) {
+      setError(`Error al eliminar permanentemente la prescripción ID ${id}.`);
+    }
+  };
   
   const isExpired = (fechaVencimiento: string | undefined) => {
     if (!fechaVencimiento) return false;
@@ -172,7 +192,7 @@ const PrescriptionListPage: React.FC = () => {
           <Table aria-label="prescription table">
             <TableHead>
               <TableRow>
-                <TableCell>ID</TableCell>
+                
                 <TableCell>Cliente</TableCell> {/* ⬅️ CAMBIO */}
                 <TableCell>Medicamento</TableCell> {/* ⬅️ CAMBIO */}
                 <TableCell>Médico</TableCell>
@@ -191,7 +211,7 @@ const PrescriptionListPage: React.FC = () => {
                         backgroundColor: p.activo === false ? '#ffebee' : isExpired(p.fechaVencimiento) ? '#fff8e1' : 'inherit' 
                     }}
                 >
-                  <TableCell>{p.id}</TableCell>
+                  
                   <TableCell>{p.clientName}</TableCell> {/* ⬅️ CAMBIO */}
                   <TableCell>{p.medicineName}</TableCell> {/* ⬅️ CAMBIO */}
                   <TableCell>{p.nombreMedico}</TableCell>
@@ -209,12 +229,23 @@ const PrescriptionListPage: React.FC = () => {
                         <EditIcon fontSize="small" />
                       </IconButton>
                     </Tooltip>
-                    <Tooltip title="Desactivar (Soft Delete)">
-                      <IconButton 
-                        color="error" 
-                        onClick={() => handleDeactivate(p.id!)}
-                        disabled={p.activo === false}
-                      >
+
+                    {p.activo === false ? (
+                      <Tooltip title="Activar Prescripción">
+                        <IconButton color="success" onClick={() => handleActivate(p.id!)}>
+                          <CheckCircleIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    ) : (
+                      <Tooltip title="Desactivar (Soft Delete)">
+                        <IconButton color="warning" onClick={() => handleDeactivate(p.id!)}>
+                          <CancelIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    )}
+
+                    <Tooltip title="Eliminar Permanentemente (Hard Delete)">
+                      <IconButton color="error" onClick={() => handleDeletePermanently(p.id!)}>
                         <DeleteIcon fontSize="small" />
                       </IconButton>
                     </Tooltip>

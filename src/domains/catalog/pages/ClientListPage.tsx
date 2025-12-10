@@ -1,29 +1,31 @@
 import React, { useState, useEffect } from 'react';
 import { Client } from '../types/Client';
 import { ClientService } from '../clients/ClientService';
-import { 
-  Container, 
-  Typography, 
-  Box, 
-  Alert, 
-  CircularProgress, 
-  Paper, 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableContainer, 
-  TableHead, 
+import {
+  Container,
+  Typography,
+  Box,
+  Alert,
+  CircularProgress,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
   TableRow,
   Button,
   Dialog,
   DialogTitle,
   DialogContent,
   IconButton,
-  Tooltip 
+  Tooltip
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import CheckCicleIcon from '@mui/icons-material/CheckCircle';
+import CancelIcon from '@mui/icons-material/Cancel';
 import ClientForm from '../components/client/ClientForm'; // Importamos el formulario
 
 const ClientListPage: React.FC = () => {
@@ -39,8 +41,8 @@ const ClientListPage: React.FC = () => {
       setLoading(true);
       const response = await ClientService.getAllClients();
       // Asume que getAllClients trae todos, incluyendo inactivos, si el backend está siguiendo el patrón
-      setClients(response.data); 
-      
+      setClients(response.data);
+
     } catch (err) {
       console.error("Error al obtener clientes:", err);
       setError('No se pudieron cargar los clientes. Verifique la conexión al backend.');
@@ -74,19 +76,41 @@ const ClientListPage: React.FC = () => {
     fetchClients(); // Recargar la lista
     setTimeout(() => setSuccessMessage(null), 4000);
   };
-  
+
+  const handleActivate = async (id: number, name: string) => {
+    if (!window.confirm(`¿Está seguro de activar al cliente ${name}?`)) return;
+    try {
+      await ClientService.activateClient(id);
+      setSuccessMessage(`Cliente "${name}" activado exitosamente.`);
+      fetchClients();
+      setTimeout(() => setSuccessMessage(null), 4000);
+    } catch (err) {
+      setError(`Error al activar el cliente ${name}.`);
+    }
+  };
+
   const handleDeactivate = async (id: number, name: string) => {
-      if (!window.confirm(`¿Está seguro de desactivar (Soft Delete) al cliente ${name}?`)) {
-          return;
-      }
-      try {
-          await ClientService.deactivateClient(id);
-          setSuccessMessage(`Cliente "${name}" desactivado exitosamente.`);
-          fetchClients();
-          setTimeout(() => setSuccessMessage(null), 4000);
-      } catch (err) {
-          setError(`Error al desactivar el cliente ${name}.`);
-      }
+    if (!window.confirm(`¿Está seguro de desactivar al cliente ${name}?`)) return;
+    try {
+      await ClientService.deactivateClient(id);
+      setSuccessMessage(`Cliente "${name}" desactivado exitosamente.`);
+      fetchClients();
+      setTimeout(() => setSuccessMessage(null), 4000);
+    } catch (err) {
+      setError(`Error al desactivar el cliente ${name}.`);
+    }
+  };
+
+  const handleDeletePermanently = async (id: number, name: string) => {
+    if (!window.confirm(`ADVERTENCIA: ¿Está seguro de ELIMINAR PERMANENTEMENTE al cliente ${name}? Esta acción no se puede deshacer.`)) return;
+    try {
+      await ClientService.deleteClientPermanently(id); // Llamada al Hard Delete
+      setSuccessMessage(`Cliente "${name}" eliminado permanentemente.`);
+      fetchClients();
+      setTimeout(() => setSuccessMessage(null), 4000);
+    } catch (err) {
+      setError(`Error al eliminar permanentemente el cliente ${name}.`);
+    }
   };
 
 
@@ -105,9 +129,9 @@ const ClientListPage: React.FC = () => {
         <Typography variant="h4">
           Listado de Clientes
         </Typography>
-        <Button 
-          variant="contained" 
-          startIcon={<AddIcon />} 
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
           onClick={handleOpenCreate}
         >
           Crear Cliente
@@ -116,7 +140,7 @@ const ClientListPage: React.FC = () => {
 
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
       {successMessage && <Alert severity="success" sx={{ mb: 2 }}>{successMessage}</Alert>}
-      
+
       {clients.length === 0 ? (
         <Alert severity="info">No hay clientes registrados.</Alert>
       ) : (
@@ -141,6 +165,8 @@ const ClientListPage: React.FC = () => {
                   <TableCell>{client.telefono || 'N/A'}</TableCell>
                   <TableCell>{client.activo === false ? 'No' : 'Sí'}</TableCell>
                   <TableCell align="center" sx={{ whiteSpace: 'nowrap' }}>
+                    
+                    {/* BOTÓN 1: EDITAR */}
                     <Tooltip title="Editar">
                       <IconButton 
                         color="primary" 
@@ -150,11 +176,35 @@ const ClientListPage: React.FC = () => {
                         <EditIcon fontSize="small" />
                       </IconButton>
                     </Tooltip>
-                    <Tooltip title="Desactivar (Soft Delete)">
+                    
+                    {/* BOTÓN 2: ACTIVAR/DESACTIVAR (Soft Delete) */}
+                    {client.activo === false ? (
+                        // Botón Activar
+                        <Tooltip title="Activar Cliente">
+                          <IconButton 
+                            color="success" 
+                            onClick={() => handleActivate(client.id!, `${client.nombres} ${client.apellidos}`)}
+                          >
+                            <CheckCicleIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                    ) : (
+                        // Botón Desactivar
+                        <Tooltip title="Desactivar (Soft Delete)">
+                          <IconButton 
+                            color="warning" 
+                            onClick={() => handleDeactivate(client.id!, `${client.nombres} ${client.apellidos}`)}
+                          >
+                            <CancelIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                    )}
+
+                    {/* BOTÓN 3: ELIMINAR PERMANENTEMENTE (Hard Delete) */}
+                    <Tooltip title="Eliminar Permanentemente (Hard Delete)">
                       <IconButton 
                         color="error" 
-                        onClick={() => handleDeactivate(client.id!, `${client.nombres} ${client.apellidos}`)}
-                        disabled={client.activo === false}
+                        onClick={() => handleDeletePermanently(client.id!, `${client.nombres} ${client.apellidos}`)}
                       >
                         <DeleteIcon fontSize="small" />
                       </IconButton>
@@ -166,7 +216,7 @@ const ClientListPage: React.FC = () => {
           </Table>
         </TableContainer>
       )}
-      
+
       {/* Modal/Dialog para el formulario de creación/edición */}
       <Dialog open={openForm} onClose={handleCloseForm} maxWidth="md" fullWidth>
         <DialogTitle>{selectedClient ? 'Editar Cliente' : 'Crear Nuevo Cliente'}</DialogTitle>

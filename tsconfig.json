@@ -1,8 +1,10 @@
+// src/tsconfig.json
 {
   "compilerOptions": {
     "target": "ES2020",
     "useDefineForClassFields": true,
-    "lib": ["ES2020", "DOM", "DOMAwaits"],
+    /* ⚠️ CAMBIO AQUÍ: Reemplaza "DOMAwaits" por "DOM.Iterable" (o elimínalo si no lo requieres) */
+    "lib": ["ES2020", "DOM", "DOM.Iterable"], 
     "module": "ESNext",
     "skipLibCheck": true,
 
@@ -31,6 +33,6 @@
       "@types/*": ["types/*"]
     }
   },
-  "include": ["src"],
-  "references": [{ "path": "./tsconfig.node.json" }]
+  "include": ["src"]
+  
 }
