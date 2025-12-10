@@ -1,13 +1,26 @@
 # Build stage
 FROM node:18 AS build
 WORKDIR /app
+
+# Definir la variable de entorno para que apunte a la ruta del proxy Nginx.
+ARG VITE_API_BASE_URL=/api/catalogo 
+ENV VITE_API_BASE_URL=${VITE_API_BASE_URL}
+
 COPY package*.json ./
 RUN npm install
 COPY . .
-RUN npm run build
+
+# Ejecutar el script de construcción (genera la carpeta 'dist')
+RUN npm run build 
 
 # Deploy with Nginx
 FROM nginx:1.25
-COPY --from=build /app/build /usr/share/nginx/html
+
+# Copiar la configuración de Nginx (con el proxy)
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# Copiar la salida de la etapa de construcción (directorio 'dist' de Vite)
+COPY --from=build /app/dist /usr/share/nginx/html 
+
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]

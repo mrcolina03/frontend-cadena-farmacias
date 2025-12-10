@@ -1,5 +1,6 @@
 import React from 'react';
-import { Box, CssBaseline, Grid, Typography } from '@mui/material';
+// Se eliminaron 'Grid' y 'Typography'
+import { Box, CssBaseline } from '@mui/material'; 
 import { Outlet } from 'react-router-dom';
 import Sidebar from '@components/layout/Sidebar';
 
