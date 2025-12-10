@@ -8,7 +8,7 @@ const MainLayout: React.FC = () => {
     <Box sx={{ display: 'flex' }}>
       <CssBaseline />
       
-      {/* ⚠️ Esto será el componente de navegación lateral */}
+      {/* Esto será el componente de navegación lateral */}
       <Sidebar /> 
       
       {/* Contenido principal con espacio para navegación fija */}

@@ -7,7 +7,7 @@ import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import InventoryIcon from '@mui/icons-material/Inventory';
 
-const drawerWidth = 240;
+const drawerWidth = 300;
 
 interface NavItem {
   text: string;
@@ -43,7 +43,7 @@ const Sidebar: React.FC = () => {
     >
       <Toolbar>
         <Typography variant="h6" noWrap component="div">
-          💊 Mi Farmacia
+          Cadena de Farmacias
         </Typography>
       </Toolbar>
       <Divider />
