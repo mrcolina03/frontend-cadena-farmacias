@@ -34,8 +34,21 @@ export const ClientService = {
     return axiosClient.put<Client>(`${BASE_PATH}/${id}`, data);
   },
 
-  // DELETE: Desactivar Cliente (Soft Delete)
+  // DESACTIVAR (Soft Delete)
   deactivateClient: (id: number) => {
     return axiosClient.delete(`${BASE_PATH}/${id}`);
-  }
+  },
+
+  // ELIMINAR Cliente (Hard Delete) - Opcional
+  deleteClientPermanently: (id: number) => {
+    return axiosClient.delete(`${BASE_PATH}/${id}/permanente`);
+  },
+
+  // PUT: Activar Cliente (Nuevo Endpoint)
+  activateClient: (id: number) => {
+    return axiosClient.put(`${BASE_PATH}/${id}/activar`);
+  },
+
+
+
 };

@@ -1,41 +1,26 @@
-# --- STAGE 1: Build Stage ---
-# Usamos una imagen base Node.js para la compilación
-FROM node:20-alpine as builder
-
-# Directorio de trabajo dentro del contenedor
+# Build stage
+FROM node:18 AS build
 WORKDIR /app
 
-# Copia los archivos de configuración y dependencias
+# Definir la variable de entorno para que apunte a la ruta del proxy Nginx.
+ARG VITE_API_BASE_URL=/api/catalogo 
+ENV VITE_API_BASE_URL=${VITE_API_BASE_URL}
+
 COPY package*.json ./
-COPY tsconfig*.json ./
-COPY vite.config.ts ./
-
-# Instala las dependencias. Usa --force o --legacy-peer-deps si hay problemas de versiones
 RUN npm install
+COPY . .
 
-# Copia el código fuente
-COPY src ./src
+# Ejecutar el script de construcción (genera la carpeta 'dist')
+RUN npm run build 
 
-# Compila la aplicación para producción
-# Asegúrate de que tu build command sea el correcto (e.g. npm run build)
-RUN npm run build
+# Deploy with Nginx
+FROM nginx:1.25
 
-# --- STAGE 2: Production Stage ---
-# Usamos una imagen base Nginx ligera para servir los archivos estáticos
-FROM nginx:alpine as production
+# Copiar la configuración de Nginx (con el proxy)
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Copia los artefactos de la compilación de la etapa 'builder'
-# El directorio 'dist' es el output por defecto de Vite
-COPY --from=builder /app/dist /usr/share/nginx/html
+# Copiar la salida de la etapa de construcción (directorio 'dist' de Vite)
+COPY --from=build /app/dist /usr/share/nginx/html 
 
-# Elimina el archivo de configuración por defecto de Nginx
-RUN rm /etc/nginx/conf.d/default.conf
-
-# Crea un archivo de configuración minimalista para Nginx
-COPY nginx.conf /etc/nginx/conf.d/mi-farmacia.conf
-
-# El contenedor expone el puerto 80 (por defecto de Nginx)
 EXPOSE 80
-
-# Comando para iniciar Nginx
 CMD ["nginx", "-g", "daemon off;"]

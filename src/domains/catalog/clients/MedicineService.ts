@@ -29,6 +29,16 @@ export const MedicineService = {
     return axiosClient.put<Medicine>(`${BASE_PATH}/${id}`, data);
   },
 
+  // PUT: Activar Medicamento
+  activateMedicine: (id: number) => {
+    return axiosClient.put(`${BASE_PATH}/${id}/activar`);
+  },
+
+  // GET: Buscar Medicamentos por nombre/código (query)
+  searchMedicines: (busqueda: string) => {
+    return axiosClient.get<Medicine[]>(`${BASE_PATH}/buscar?busqueda=${encodeURIComponent(busqueda)}`);
+  },
+
   // DELETE: Desactivar Medicamento (Soft Delete)
   deactivateMedicine: (id: number) => {
     return axiosClient.delete(`${BASE_PATH}/${id}`);
