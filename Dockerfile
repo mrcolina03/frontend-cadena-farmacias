@@ -9,6 +9,8 @@ WORKDIR /app
 COPY package*.json ./
 COPY tsconfig*.json ./
 COPY vite.config.ts ./
+COPY index.html ./
+COPY public ./public
 
 # Instala las dependencias. Usa --force o --legacy-peer-deps si hay problemas de versiones
 RUN npm install
