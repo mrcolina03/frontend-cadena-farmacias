@@ -5,6 +5,11 @@ import MainLayout from '@components/layout/MainLayout';
 import MedicineListPage from '@domains/catalog/pages/MedicineListPage';
 import ClientListPage from '@domains/catalog/pages/ClientListPage';
 import PrescriptionListPage from '@domains/catalog/pages/PrescriptionListPage';
+
+// Vistas del dominio Catálogo (asume que las has creado en src/domains/invenario/pages)
+import SucursalListPage from '@domains/Inventario/pages/SucursalListPage';
+import StockPage from '@domains/Inventario/pages/InventarioSucursales';
+import SucursalListPageInactivas from '@domains/Inventario/pages/SucursalListPageInactivas';
 // Nota: Puedes agregar una vista de detalle (ej. MedicineDetailsPage) más adelante
 
 const App: React.FC = () => {
@@ -29,9 +34,11 @@ const App: React.FC = () => {
             {/* <Route path="orders" element={<OrderListPage />} /> */}
           </Route>
           
-          {/* 💡 Rutas Futuras de Inventario */}
-          <Route path="/inventory">
-            {/* <Route path="stock" element={<StockPage />} /> */}
+          {/* 💡 Rutas de Inventario */}
+          <Route path="/inventario">
+            <Route path="sucursal" element={<SucursalListPage />} />
+            <Route path="sucursal/:sucursalId" element={<StockPage />} />
+            <Route path="sucursal/inactivas" element={<SucursalListPageInactivas />} />
           </Route>
 
           {/* Manejo de rutas no encontradas (404) */}

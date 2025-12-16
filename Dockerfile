@@ -7,6 +7,12 @@ ARG VITE_API_BASE_URL=/api/catalogo
 ENV VITE_API_BASE_URL=${VITE_API_BASE_URL}
 
 COPY package*.json ./
+COPY tsconfig*.json ./
+COPY vite.config.ts ./
+COPY index.html ./
+COPY public ./public
+
+# Instala las dependencias. Usa --force o --legacy-peer-deps si hay problemas de versiones
 RUN npm install
 COPY . .
 

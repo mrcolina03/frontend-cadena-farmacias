@@ -1,0 +1,24 @@
+version: "3.8"
+
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        # Variables de entorno para la etapa de build (Vite las usa en npm run build)
+        VITE_API_BASE_URL: "http://ms-catalogos:8081/api/catalogo"
+        VITE_API_INVENTARIO_URL: "http://ms-inventariov2-1:8082/inventario"
+    container_name: frontend-cadena-farmacia
+    ports:
+      - "80:80"
+    environment:
+      # Variables disponibles en tiempo de ejecución
+      VITE_API_BASE_URL: "http://ms-catalogos:8081/api/catalogo"
+      VITE_API_INVENTARIO_URL: "http://ms-inventariov2-1:8082/inventario"
+    networks:
+      - red_cadena_farmacia
+
+networks:
+  red_cadena_farmacia:
+    external: true

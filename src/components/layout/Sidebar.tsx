@@ -6,7 +6,8 @@ import PeopleIcon from '@mui/icons-material/People';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import InventoryIcon from '@mui/icons-material/Inventory';
-
+import StoreIcon from '@mui/icons-material/Store';
+import StoreOutlinedIcon from '@mui/icons-material/StoreOutlined';
 const drawerWidth = 300;
 
 interface NavItem {
@@ -20,7 +21,10 @@ const sidebarItems: NavItem[] = [
   { text: 'Medicamentos', icon: <MedicationIcon />, path: '/catalog/medicamentos' },
   { text: 'Clientes', icon: <PeopleIcon />, path: '/catalog/clientes' },
   { text: 'Prescripciones', icon: <ReceiptLongIcon />, path: '/catalog/prescripciones' },
-  
+
+// --- Dominio Sucursales ---
+{ text: 'Sucursales Activas', icon: <StoreIcon />, path: '/inventario/sucursal' },
+{ text: 'Sucursales Inactivas', icon: <StoreOutlinedIcon />, path: '/inventario/sucursal/inactivas' },
   // --- Futuros Dominios ---
   // Estos elementos ya dejan el espacio para escalar
   { text: 'Ventas (WIP)', icon: <ShoppingCartIcon />, path: '/sales/orders' },
@@ -77,6 +81,25 @@ const Sidebar: React.FC = () => {
         ))}
       </List>
       
+
+      <List>
+        <Box sx={{ p: 2, pb: 0 }}>
+            <Typography variant="overline" color="text.secondary">
+                Inventario
+            </Typography>
+        </Box>
+        {sidebarItems.slice(3,5).map((item) => (
+          <ListItem key={item.text} disablePadding>
+            <ListItemButton 
+                component={NavLink}
+                to={item.path}
+            >
+              <ListItemIcon>{item.icon}</ListItemIcon>
+              <ListItemText primary={item.text} secondary="" />
+            </ListItemButton>
+          </ListItem>
+        ))}
+      </List>
       <Divider />
       
       {/* Sección para futuros módulos */}
@@ -91,7 +114,7 @@ const Sidebar: React.FC = () => {
             <ListItemButton 
                 component={NavLink}
                 to={item.path}
-                disabled={true} // Deshabilita temporalmente hasta que se implementen
+                disabled={true}
             >
               <ListItemIcon>{item.icon}</ListItemIcon>
               <ListItemText primary={item.text} secondary="(En desarrollo)" />
