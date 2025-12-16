@@ -1,13 +1,20 @@
+// src/components/layout/Sidebar.tsx
+
 import React from 'react';
 import { Drawer, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Toolbar, Divider, Box, Typography } from '@mui/material';
 import { NavLink } from 'react-router-dom';
+
+// Iconos existentes
 import MedicationIcon from '@mui/icons-material/Medication';
 import PeopleIcon from '@mui/icons-material/People';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
-import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
-import InventoryIcon from '@mui/icons-material/Inventory';
 import StoreIcon from '@mui/icons-material/Store';
 import StoreOutlinedIcon from '@mui/icons-material/StoreOutlined';
+
+// Iconos para Ventas y Reportes
+import ShoppingCartCheckoutIcon from '@mui/icons-material/ShoppingCartCheckout'; // Para el CRUD de Ventas
+import BarChartIcon from '@mui/icons-material/BarChart'; // Para el Dashboard de Reportes
+
 const drawerWidth = 300;
 
 interface NavItem {
@@ -17,21 +24,59 @@ interface NavItem {
 }
 
 const sidebarItems: NavItem[] = [
+  // --- Dominio Ventas ---
+  { text: 'Ventas (CRUD)', icon: <ShoppingCartCheckoutIcon />, path: '/ventas/dashboard' },
+  { text: 'Dashboard Reportes', icon: <BarChartIcon />, path: '/reportes/dashboard' },
+  
   // --- Dominio Catálogo ---
   { text: 'Medicamentos', icon: <MedicationIcon />, path: '/catalog/medicamentos' },
   { text: 'Clientes', icon: <PeopleIcon />, path: '/catalog/clientes' },
   { text: 'Prescripciones', icon: <ReceiptLongIcon />, path: '/catalog/prescripciones' },
 
-// --- Dominio Sucursales ---
-{ text: 'Sucursales Activas', icon: <StoreIcon />, path: '/inventario/sucursal' },
-{ text: 'Sucursales Inactivas', icon: <StoreOutlinedIcon />, path: '/inventario/sucursal/inactivas' },
-  // --- Futuros Dominios ---
-  // Estos elementos ya dejan el espacio para escalar
-  { text: 'Ventas (WIP)', icon: <ShoppingCartIcon />, path: '/sales/orders' },
-  { text: 'Inventario (WIP)', icon: <InventoryIcon />, path: '/inventory/stock' },
+  // --- Dominio Inventario ---
+  { text: 'Sucursales Activas', icon: <StoreIcon />, path: '/inventario/sucursal' },
+  { text: 'Sucursales Inactivas', icon: <StoreOutlinedIcon />, path: '/inventario/sucursal/inactivas' },
 ];
 
 const Sidebar: React.FC = () => {
+
+  // Definimos los índices para facilitar el corte de las listas
+  const ventasReportes = sidebarItems.slice(0, 2); // Items 0 y 1
+  const catalogo = sidebarItems.slice(2, 5);      // Items 2, 3 y 4
+  const inventario = sidebarItems.slice(5, 7);    // Items 5 y 6
+
+  const renderNavSection = (title: string, items: NavItem[]) => (
+    <List>
+      <Box sx={{ p: 2, pb: 0 }}>
+          <Typography variant="overline" color="text.secondary">
+              {title}
+          </Typography>
+      </Box>
+      {items.map((item) => (
+        <ListItem key={item.text} disablePadding>
+          <ListItemButton
+            component={NavLink}
+            to={item.path}
+            // Estilo para marcar el item activo
+            sx={{ 
+              '&.active': { 
+                backgroundColor: 'rgba(0, 0, 0, 0.08)',
+                color: 'primary.main',
+                fontWeight: 'bold',
+                '& .MuiListItemIcon-root': {
+                  color: 'primary.main',
+                },
+              },
+            }}
+          >
+            <ListItemIcon>{item.icon}</ListItemIcon>
+            <ListItemText primary={item.text} />
+          </ListItemButton>
+        </ListItem>
+      ))}
+    </List>
+  );
+
   return (
     <Drawer
       sx={{
@@ -52,76 +97,18 @@ const Sidebar: React.FC = () => {
       </Toolbar>
       <Divider />
       
-      <List>
-        <Box sx={{ p: 2, pb: 0 }}>
-            <Typography variant="overline" color="text.secondary">
-                Módulos de Catálogo
-            </Typography>
-        </Box>
-        {sidebarItems.slice(0, 3).map((item) => (
-          <ListItem key={item.text} disablePadding>
-            <ListItemButton
-              component={NavLink}
-              to={item.path}
-              // Estilo para marcar el item activo
-              sx={{ 
-                '&.active': { 
-                  backgroundColor: 'rgba(0, 0, 0, 0.08)',
-                  color: 'primary.main',
-                  '& .MuiListItemIcon-root': {
-                    color: 'primary.main',
-                  },
-                },
-              }}
-            >
-              <ListItemIcon>{item.icon}</ListItemIcon>
-              <ListItemText primary={item.text} />
-            </ListItemButton>
-          </ListItem>
-        ))}
-      </List>
-      
+      {/* 🚀 Sección de Ventas y Reportes */}
+      {renderNavSection('Ventas y Análisis', ventasReportes)}
+      <Divider />
 
-      <List>
-        <Box sx={{ p: 2, pb: 0 }}>
-            <Typography variant="overline" color="text.secondary">
-                Inventario
-            </Typography>
-        </Box>
-        {sidebarItems.slice(3,5).map((item) => (
-          <ListItem key={item.text} disablePadding>
-            <ListItemButton 
-                component={NavLink}
-                to={item.path}
-            >
-              <ListItemIcon>{item.icon}</ListItemIcon>
-              <ListItemText primary={item.text} secondary="" />
-            </ListItemButton>
-          </ListItem>
-        ))}
-      </List>
+      {/* 📋 Sección de Catálogo */}
+      {renderNavSection('Módulos de Catálogo', catalogo)}
       <Divider />
       
-      {/* Sección para futuros módulos */}
-      <List>
-        <Box sx={{ p: 2, pb: 0 }}>
-            <Typography variant="overline" color="text.secondary">
-                Próximos Módulos
-            </Typography>
-        </Box>
-        {sidebarItems.slice(3).map((item) => (
-          <ListItem key={item.text} disablePadding>
-            <ListItemButton 
-                component={NavLink}
-                to={item.path}
-                disabled={true}
-            >
-              <ListItemIcon>{item.icon}</ListItemIcon>
-              <ListItemText primary={item.text} secondary="(En desarrollo)" />
-            </ListItemButton>
-          </ListItem>
-        ))}
-      </List>
+      {/* 📦 Sección de Inventario */}
+      {renderNavSection('Inventario', inventario)}
+      
+      {/* Nota: Eliminé la sección "Próximos Módulos" ya que Ventas y Reportes ya están implementados */}
     </Drawer>
   );
 };
