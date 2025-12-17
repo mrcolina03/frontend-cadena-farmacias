@@ -1,7 +1,9 @@
 export interface ReporteVenta {
+  id: number;
   fecha: string;
-  cantidadVentas: number;
-  totalRecaudado: number;
+  clienteId: number;
+  sucursalId: number;
+  total: number;
 }
 
 export interface ProductoMasVendido {

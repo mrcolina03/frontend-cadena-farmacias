@@ -11,10 +11,4 @@ export const ReporteService = {
     });
   },
 
-  // GET: Obtener resumen ejecutivo para el dashboard
-  getResumenDashboard: (desde: string, hasta: string) => {
-    return axiosReportes.get<ResumenReporte>(`${BASE_PATH}/resumen`, {
-      params: { desde, hasta }
-    });
-  }
 };

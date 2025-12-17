@@ -1,8 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Box, Button, TextField, Typography, Grid, IconButton, 
-  Table, TableBody, TableContainer, TableCell, TableHead, TableRow, 
-  Autocomplete, Paper, Alert, CircularProgress
+import {
+  Box,
+  Button,
+  TextField,
+  Typography,
+  Grid,
+  IconButton,
+  Table,
+  TableBody,
+  TableContainer,
+  TableCell,
+  TableHead,
+  TableRow,
+  Autocomplete,
+  Paper,
+  Alert,
+  CircularProgress
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SaveIcon from '@mui/icons-material/Save';
@@ -10,13 +23,18 @@ import SaveIcon from '@mui/icons-material/Save';
 import { VentaService } from '../clients/VentaService';
 import { ClientService } from '../../catalog/clients/ClientService';
 import { MedicineService } from '../../catalog/clients/MedicineService';
-// Importa el servicio de sucursales (ajusta la ruta según tu proyecto)
-import { SucursalService } from '../../Inventario/clients/SucursalServices'; 
+import { SucursalService } from '../../Inventario/clients/SucursalServices';
 
 import { Client } from '../../catalog/types/Client';
 import { Medicine } from '../../catalog/types/Medicine';
 import { CreateVentaDTO } from '../types/Venta';
 import { extractErrorMessage } from '@api/clients/axiosClient';
+
+interface CartItem {
+  medicine: Medicine;
+  quantity: number;
+  precioUnitario: number;
+}
 
 interface Props {
   onSuccess: () => void;
@@ -24,16 +42,14 @@ interface Props {
 }
 
 const VentaForm: React.FC<Props> = ({ onSuccess, onClose }) => {
-  // Estados para datos de Catálogos e Inventario
   const [clients, setClients] = useState<Client[]>([]);
   const [medicines, setMedicines] = useState<Medicine[]>([]);
-  const [sucursales, setSucursales] = useState<any[]>([]); // Ajustar tipo según tu interface de Sucursal
+  const [sucursales, setSucursales] = useState<any[]>([]);
   const [loadingCatalog, setLoadingCatalog] = useState(false);
 
-  // Estados del Formulario
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [selectedSucursal, setSelectedSucursal] = useState<any | null>(null);
-  const [cart, setCart] = useState<{ medicine: Medicine, quantity: number }[]>([]);
+  const [cart, setCart] = useState<CartItem[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -43,13 +59,14 @@ const VentaForm: React.FC<Props> = ({ onSuccess, onClose }) => {
         const [resClients, resMedicines, resSucursales] = await Promise.all([
           ClientService.getAllClients(),
           MedicineService.getAllMedicines(),
-          SucursalService.getAllSucursales() // Carga desde ms-inventario
+          SucursalService.getAllSucursales()
         ]);
+
         setClients(resClients.data);
         setMedicines(resMedicines.data.filter((m: any) => m.activo));
         setSucursales(resSucursales.data);
-      } catch (err) {
-        setError("Error al cargar datos de catálogos o sucursales.");
+      } catch {
+        setError('Error al cargar datos iniciales');
       } finally {
         setLoadingCatalog(false);
       }
@@ -57,15 +74,25 @@ const VentaForm: React.FC<Props> = ({ onSuccess, onClose }) => {
     loadData();
   }, []);
 
+  // ✅ CORREGIDO
   const addToCart = (medicine: Medicine | null) => {
     if (!medicine) return;
+
+    const precioUnitario = Number(medicine.precio);
+
     const exists = cart.find(item => item.medicine.id === medicine.id);
+
     if (exists) {
-      setCart(cart.map(item => 
-        item.medicine.id === medicine.id ? { ...item, quantity: item.quantity + 1 } : item
+      setCart(cart.map(item =>
+        item.medicine.id === medicine.id
+          ? { ...item, quantity: item.quantity + 1 }
+          : item
       ));
     } else {
-      setCart([...cart, { medicine, quantity: 1 }]);
+      setCart([
+        ...cart,
+        { medicine, quantity: 1, precioUnitario }
+      ]);
     }
   };
 
@@ -73,15 +100,20 @@ const VentaForm: React.FC<Props> = ({ onSuccess, onClose }) => {
     setCart(cart.filter(item => item.medicine.id !== id));
   };
 
-  const calculateTotal = () => cart.reduce((acc, item) => acc + (item.medicine.precio * item.quantity), 0);
+  // ✅ TOTAL REAL
+  const calculateTotal = () =>
+    cart.reduce(
+      (acc, item) => acc + item.precioUnitario * item.quantity,
+      0
+    );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedClient) return setError("Debe seleccionar un cliente");
-    if (!selectedSucursal) return setError("Debe seleccionar una sucursal");
-    if (cart.length === 0) return setError("El carrito está vacío");
 
-    // Construcción del DTO mapeado exactamente a VentaRequestDTO.java
+    if (!selectedClient) return setError('Debe seleccionar un cliente');
+    if (!selectedSucursal) return setError('Debe seleccionar una sucursal');
+    if (cart.length === 0) return setError('El carrito está vacío');
+
     const ventaDTO: CreateVentaDTO = {
       clienteId: selectedClient.id!,
       sucursalId: selectedSucursal.id!,
@@ -99,81 +131,94 @@ const VentaForm: React.FC<Props> = ({ onSuccess, onClose }) => {
     }
   };
 
-  if (loadingCatalog) return <Box p={3} textAlign="center"><CircularProgress /><Typography>Cargando datos...</Typography></Box>;
+  if (loadingCatalog) {
+    return (
+      <Box textAlign="center" p={3}>
+        <CircularProgress />
+        <Typography>Cargando datos...</Typography>
+      </Box>
+    );
+  }
 
   return (
     <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
       <Grid container spacing={3}>
-        {/* Selección de Sucursal (ms-inventario) */}
         <Grid item xs={12} md={6}>
           <Autocomplete
             options={sucursales}
-            getOptionLabel={(option) => option.nombre || `Sucursal ${option.id}`}
-            onChange={(_, value) => setSelectedSucursal(value)}
-            renderInput={(params) => <TextField {...params} label="Sucursal de Despacho" required variant="outlined" />}
+            getOptionLabel={(o) => o.nombre || `Sucursal ${o.id}`}
+            onChange={(_, v) => setSelectedSucursal(v)}
+            renderInput={(p) =>
+              <TextField {...p} label="Sucursal" required />
+            }
           />
         </Grid>
 
-        {/* Selección de Cliente (ms-catalogo) */}
         <Grid item xs={12} md={6}>
           <Autocomplete
             options={clients}
-            getOptionLabel={(option) => `${option.cedula} - ${option.nombres} ${option.apellidos}`}
-            onChange={(_, value) => setSelectedClient(value)}
-            renderInput={(params) => <TextField {...params} label="Seleccionar Cliente" required variant="outlined" />}
+            getOptionLabel={(o) => `${o.cedula} - ${o.nombres}`}
+            onChange={(_, v) => setSelectedClient(v)}
+            renderInput={(p) =>
+              <TextField {...p} label="Cliente" required />
+            }
           />
         </Grid>
 
-        {/* Selección de Medicamento (ms-catalogo) */}
         <Grid item xs={12}>
           <Autocomplete
             options={medicines}
-            getOptionLabel={(option) => `${option.nombre} - $${option.precio}`}
-            onChange={(_, value) => addToCart(value)}
-            renderInput={(params) => (
-              <TextField 
-                {...params} 
-                label="Agregar Medicamento" 
-                placeholder="Escriba el nombre del producto..." 
-                variant="filled"
-              />
-            )}
+            getOptionLabel={(o) => `${o.nombre} - $${o.precio}`}
+            onChange={(_, v) => addToCart(v)}
+            renderInput={(p) =>
+              <TextField {...p} label="Agregar medicamento" />
+            }
           />
         </Grid>
 
-        {/* Carrito / Tabla de Items */}
         <Grid item xs={12}>
-          <TableContainer component={Paper} variant="outlined">
+          <TableContainer component={Paper}>
             <Table size="small">
-              <TableHead sx={{ bgcolor: '#f5f5f5' }}>
+              <TableHead>
                 <TableRow>
                   <TableCell>Producto</TableCell>
                   <TableCell align="center">Cantidad</TableCell>
                   <TableCell align="right">Precio</TableCell>
                   <TableCell align="right">Subtotal</TableCell>
-                  <TableCell align="center">Acción</TableCell>
+                  <TableCell align="center" />
                 </TableRow>
               </TableHead>
+
               <TableBody>
-                {cart.map((item) => (
+                {cart.map(item => (
                   <TableRow key={item.medicine.id}>
                     <TableCell>{item.medicine.nombre}</TableCell>
                     <TableCell align="center">{item.quantity}</TableCell>
-                    <TableCell align="right">${item.medicine.precio.toFixed(2)}</TableCell>
-                    <TableCell align="right">${(item.medicine.precio * item.quantity).toFixed(2)}</TableCell>
+                    <TableCell align="right">
+                      ${item.precioUnitario.toFixed(2)}
+                    </TableCell>
+                    <TableCell align="right">
+                      ${(item.precioUnitario * item.quantity).toFixed(2)}
+                    </TableCell>
                     <TableCell align="center">
-                      <IconButton color="error" onClick={() => removeItem(item.medicine.id!)}>
+                      <IconButton
+                        color="error"
+                        onClick={() => removeItem(item.medicine.id!)}
+                      >
                         <DeleteIcon fontSize="small" />
                       </IconButton>
                     </TableCell>
                   </TableRow>
                 ))}
+
                 {cart.length > 0 && (
                   <TableRow>
-                    <TableCell colSpan={3} align="right" sx={{ fontWeight: 'bold' }}>TOTAL:</TableCell>
-                    <TableCell align="right" sx={{ fontWeight: 'bold', color: 'primary.main' }}>
+                    <TableCell colSpan={3} align="right" >
+                      TOTAL
+                    </TableCell>
+                    <TableCell align="right" >
                       ${calculateTotal().toFixed(2)}
                     </TableCell>
                     <TableCell />
@@ -187,11 +232,11 @@ const VentaForm: React.FC<Props> = ({ onSuccess, onClose }) => {
 
       <Box sx={{ mt: 4, display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
         <Button onClick={onClose}>Cancelar</Button>
-        <Button 
-          type="submit" 
-          variant="contained" 
-          startIcon={<SaveIcon />} 
-          disabled={cart.length === 0 || !selectedClient || !selectedSucursal}
+        <Button
+          type="submit"
+          variant="contained"
+          startIcon={<SaveIcon />}
+          disabled={!selectedClient || !selectedSucursal || cart.length === 0}
         >
           Confirmar Venta
         </Button>
