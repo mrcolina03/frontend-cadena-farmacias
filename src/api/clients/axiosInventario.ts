@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const INVENTARIO_BASE_URL =
-  import.meta.env.VITE_API_INVENTARIO_URL || 'http://localhost:8082/api/inventario';
+  import.meta.env.VITE_API_INVENTARIO_URL || '/api/inventario';
 
 export const axiosInventario = axios.create({
   baseURL: INVENTARIO_BASE_URL,

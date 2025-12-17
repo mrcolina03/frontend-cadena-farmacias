@@ -2,8 +2,10 @@
 
 import axios from 'axios';
 
+const VITE_VENTAS_URL = import.meta.env.VITE_API_VENTAS_URL;
+
 const api = axios.create({
-  baseURL: 'http://localhost:8080/api', // Ajusta el puerto si es necesario
+  baseURL: VITE_VENTAS_URL, // Ajusta el puerto si es necesario
   headers: {
     'Content-Type': 'application/json',
   },

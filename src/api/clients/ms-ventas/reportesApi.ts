@@ -3,7 +3,7 @@
 import api from './axiosConfig';
 import { Venta } from '../../../types/api';
 
-const REPORTE_URL = '/reportes';
+const REPORTE_URL = import.meta.env.VITE_API_REPORTES_URL || '/api/reportes';
 
 export const getReporteVentas = async (desde: string, hasta: string): Promise<Venta[]> => {
   const response = await api.get<Venta[]>(`${REPORTE_URL}/ventas`, {
